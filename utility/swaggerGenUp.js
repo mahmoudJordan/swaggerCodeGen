@@ -5,6 +5,8 @@ function swaggerGenUp(externalPort) {
     return new Promise(async (resolve, reject) => {
         try {
             const containerName = "swaggerCodeGen";
+            const imageName = 'swaggerapi/swagger-generator-v3:latest'
+            
             // check if it`s exists 
             const checkExsistsCommand = `docker ps -a --filter "name=${containerName}" --quiet`;
             const checkAlreadyRunningCommand = `docker ps -a --filter "name=${containerName}" --filter "status=running" --quiet`;
@@ -27,7 +29,7 @@ function swaggerGenUp(externalPort) {
             else {
                 // container does not exist
                 // run it for the first
-                command = `docker run --name=${containerName} --user=codegenuser --env=PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin --env=container=oci --env=disableOas31Resolve=False --env=JAVA_HOME=/opt/java/openjdk --env=JETTY_HOME=/jetty_home --env=JETTY_BASE=/generator --env=HTTP_PORT=8080 --env=JAVA_MEM=1024m --env=EXIT_ON_OUTOFMEMORYERROR= --workdir=/generator --runtime=runc -d -p ${externalPort}:${externalPort} swaggerapi/swagger-generator-v3:latest`;
+                command = `docker run --name=${containerName} --user=codegenuser --env=PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin --env=container=oci --env=disableOas31Resolve=False --env=JAVA_HOME=/opt/java/openjdk --env=JETTY_HOME=/jetty_home --env=JETTY_BASE=/generator --env=HTTP_PORT=8080 --env=JAVA_MEM=1024m --env=EXIT_ON_OUTOFMEMORYERROR= --workdir=/generator --runtime=runc -d -p ${externalPort}:${externalPort} ${imageName}`;
             }
 
 
