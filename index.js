@@ -1,28 +1,47 @@
 const generateClient = require('./utility/generateClient');
 const config = require("./config");
 const unzip = require('./utility/unzip');
-const swaggerGenUp = require('./utility/swaggerGenUp');
+const swaggerGenDocker = require('./utility/swaggerGenDocker');
 const fs = require("fs");
 
 const outputPath = "./.generated/typescript-angular-client-generated.zip";
 const extractedPath = `./.generated/typescript-angular-client-generated`;
-const codeType = 'Client';
+const codeType = 'CLIENT';
 const targetLanguage = 'typescript-angular';
 
 (async () => {
+    try {
+        console.log(`Checking SwaggerGen Docker Container`)
 
-    
-    console.log(`Checking SwaggerGen Docker Container`)
-    await swaggerGenUp(config.swaggerContainerPreferedExternalPort);
+        if (!await swaggerGenDocker.ensureDockerDaemonIsRunning()) {
+            console.error('Docker daemon is not running. Exiting...');
+            return;
+        }
 
-    console.log(`Calling SwaggerGen ... Generating Code`);
-    await generateClient(config.baseGenUrl, config.swaggerJsonUrl, codeType,targetLanguage , outputPath);
 
-    console.log(`Extracting ${outputPath}`);
-    await unzip(outputPath, extractedPath);
+        const dockerContainer = await swaggerGenDocker.swaggerGenUp(config.swaggerContainerPreferedExternalPort);
 
-    console.log(`Removing ${outputPath}`);
-    await fs.unlinkSync(outputPath);
+        if (dockerContainer) {
 
-    console.log(`File downloaded ane extracted as ${extractedPath}`)
+            console.log(`Calling SwaggerGen ... Generating Code`);
+            await generateClient(config.baseGenUrl, config.swaggerJsonUrl, codeType, targetLanguage, outputPath);
+
+            console.log(`Extracting ${outputPath}`);
+            await unzip(outputPath, extractedPath);
+
+            console.log(`Removing ${outputPath}`);
+            await fs.unlinkSync(outputPath);
+
+            console.log(`File downloaded ane extracted as ${extractedPath}`);
+
+            dockerContainer.kill();
+        }
+
+    }
+    catch (e) {
+        console.error(e);
+        throw e;
+    }
+
+
 })();
