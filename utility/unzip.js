@@ -4,7 +4,7 @@ function extractFile(input, output) {
     return new Promise((resolve, reject) => {
         try {
             const zip = new AdmZip(input);
-            zip.extractAllTo(output);
+            zip.extractAllTo(output , true);
             console.log("Finished Extracting");
             resolve();
         } catch (e) {

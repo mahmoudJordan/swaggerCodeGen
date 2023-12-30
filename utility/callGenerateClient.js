@@ -1,8 +1,7 @@
 const request = require('request');
 const fs = require('fs');
-const path = require('path');
 
-function generateClient(baseGenUrl , specURL, type, lang, savePath) {
+function callGenerateClient(baseGenUrl , specURL, type, lang, savePath) {
     return new Promise((resolve, reject) => {
         var options = {
             'method': 'POST',
@@ -53,5 +52,5 @@ function generateClient(baseGenUrl , specURL, type, lang, savePath) {
     });
 }
 
-module.exports = generateClient;
+module.exports = callGenerateClient;
 
