@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "request": "^2.88.2",
-    "unzipper": "^0.10.14"
+    "adm-zip": "^0.5.10",
+    "request": "^2.88.2"
   }
 }

@@ -1,18 +1,16 @@
-const unzipper = require('unzipper');
-const fs = require("fs");
+const AdmZip = require("adm-zip");
 
 function extractFile(input, output) {
     return new Promise((resolve, reject) => {
-        fs.createReadStream(input)
-            .pipe(unzipper.Extract({ path: output }))
-            .on('close', () => {
-                resolve();
-                console.log("Finished");
-            })
-            .on("error", (error) => {
-                reject(error);
-            })
-
+        try {
+            const zip = new AdmZip(input);
+            zip.extractAllTo(output);
+            console.log("Finished Extracting");
+            resolve();
+        } catch (e) {
+            console.error(e);
+            reject(e);
+        }
     });
 }
 
