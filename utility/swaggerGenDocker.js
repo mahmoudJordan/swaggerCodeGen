@@ -1,8 +1,14 @@
 const Docker = require('dockerode');
 const docker = new Docker(); // connects to Docker daemon
+const { setInterval } = require('timers');
+const { exec } = require('child_process');
+const os = require('os');
 
 
-async function ensureDockerDaemonIsRunning() {
+
+const _deamonMaxTrials = 5;
+
+async function isDockerDaemonRunning() {
     try {
         // Ping the Docker daemon
         const data = await docker.ping();
@@ -11,12 +17,45 @@ async function ensureDockerDaemonIsRunning() {
             return true;
         } else {
             console.error('Failed to connect to Docker daemon.');
+
+            console.log(`trying to run docker daemon`);
             return false;
         }
     } catch (error) {
-        console.error(`Error connecting to Docker daemon: ${error.message}`);
         return false;
     }
+}
+
+async function ensureDockerDaemonIsRunning() {
+    let _trials = 0;
+    let _intervalHandler = null;
+    return await new Promise(async (resolve, reject) => {
+
+        let isDaemonRunning = await isDockerDaemonRunning();
+
+        if (isDaemonRunning) {
+            return resolve(true);
+        }
+        else {
+            console.log(`Docker is not running. Attempting to start Docker...`);
+            await startDocker();
+
+            _intervalHandler = setInterval(async () => {
+                isDaemonRunning = await isDockerDaemonRunning();
+                if (isDaemonRunning) {
+                    console.log(`Started Docker Engine Successfully`);
+                    clearInterval(_intervalHandler);
+                    return resolve(true);
+                }
+                if (_trials == _deamonMaxTrials) {
+                    console.log(`Failure ... cannot start Docker Engine`);
+                    clearInterval(_intervalHandler);
+                    return reject(false);
+                }
+                ++_trials;
+            }, 3000);
+        }
+    });
 }
 
 async function swaggerGenUp(externalPort) {
@@ -135,6 +174,46 @@ function waitForReadiness(container, logString) {
             stream.on('end', function () {
                 logStream.end('');
             });
+        });
+    });
+}
+
+
+async function startDocker() {
+    if (os.platform() === 'win32') {
+        // Windows: Start Docker using PowerShell
+        await startDockerOnWindows();
+    } else if (os.platform() === 'linux') {
+        // Linux: Start Docker using a system command
+        await startDockerOnLinux();
+    } else {
+        console.error('Unsupported operating system for starting Docker.');
+    }
+}
+
+async function startDockerOnWindows() {
+    return new Promise((resolve, reject) => {
+        const command = 'start "" "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe"';
+        exec(command, (error) => {
+            if (error) {
+                console.error('Failed to start Docker Desktop:', error);
+                return reject(error);
+            }
+            console.log('Docker Desktop is starting...');
+            resolve();
+        });
+    });
+}
+
+async function startDockerOnLinux() {
+    return new Promise((resolve, reject) => {
+        exec('sudo systemctl start docker', (error, stdout, stderr) => {
+            if (error) {
+                console.error('Failed to start Docker:', error);
+                return reject(error);
+            }
+            console.log('Docker is starting...');
+            resolve(stdout);
         });
     });
 }

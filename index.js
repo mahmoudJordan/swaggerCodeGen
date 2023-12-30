@@ -11,14 +11,15 @@ const targetLanguage = 'typescript-angular';
 
 (async () => {
     try {
-        console.log(`Checking SwaggerGen Docker Container`)
+      
 
+        console.log(`Checking Docker status...`);
         if (!await swaggerGenDocker.ensureDockerDaemonIsRunning()) {
-            console.error('Docker daemon is not running. Exiting...');
+            console.error('Docker daemon is not running and cannot run it. Exiting...');
             return;
         }
 
-
+        console.log(`Checking SwaggerGen Docker Container`)
         const dockerContainer = await swaggerGenDocker.swaggerGenUp(config.swaggerContainerPreferedExternalPort);
 
         if (dockerContainer) {
